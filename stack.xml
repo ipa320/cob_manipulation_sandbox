@@ -1,0 +1,20 @@
+<stack>
+  <description brief="cob_manipulation_sandbox">
+  
+  The cob_manipulation_sandbox stack is for temporary or experimental code regarding manipulation.
+  
+  </description>
+  <author>Maintained by Alexander Bubeck</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_manipulation_sandbox</url>
+  <depend stack="arm_navigation" /> <!-- kinematics_base, planning_models, kinematics_msgs, planning_environment, arm_navigation_msgs -->
+  <depend stack="common_msgs" /> <!-- sensor_msgs -->
+  <depend stack="geometry" /> <!-- tf, tf_conversions -->
+  <depend stack="orocos_kinematics_dynamics" /> <!-- kdl -->
+  <depend stack="pluginlib" /> <!-- pluginlib -->
+  <depend stack="robot_model" /> <!-- kdl_parser -->
+  <depend stack="ros" />
+  <depend stack="ros_comm" /> <!-- roscpp -->
+
+</stack>
