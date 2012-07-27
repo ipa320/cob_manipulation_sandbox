@@ -1,0 +1,5 @@
+ <launch>
+    <node pkg="cob_arm_navigation_experimental" type="motion_plan_cache.py" name="motion_plan_cache" ns="cob_arm_navigation">
+        <remap from="get_motion_plan" to="/ompl_planning/plan_kinematic_path"/>
+    </node>
+ </launch>
