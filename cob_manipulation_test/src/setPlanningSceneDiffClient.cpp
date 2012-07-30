@@ -68,12 +68,12 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 
 	ros::service::waitForService(SET_PLANNING_SCENE_DIFF_NAME);
-	ros::ServiceClient set_planning_scene_dif_client = nh.serviceClient<arm_navigation_msgs::SetPlanningSceneDiff>(SET_PLANNING_SCENE_DIFF_NAME);
+	ros::ServiceClient set_planning_scene_diff_client = nh.serviceClient<arm_navigation_msgs::SetPlanningSceneDiff>(SET_PLANNING_SCENE_DIFF_NAME);
 	
 	arm_navigation_msgs::SetPlanningSceneDiff::Request set_planning_scene_diff_req;
 	arm_navigation_msgs::SetPlanningSceneDiff::Response set_planning_scene_diff_res;
 	
-	if(!set_planning_scene_dif_client.call(set_planning_scene_diff_req, set_planning_scene_diff_res)) 
+	if(!set_planning_scene_diff_client.call(set_planning_scene_diff_req, set_planning_scene_diff_res)) 
 	{
 		ROS_WARN("Can't set planning scene diff");
 		return -1;
