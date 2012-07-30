@@ -10,13 +10,19 @@ from simple_script_server import *
 #from script_utils import *
 
 from cob_object_handler.srv import HandleObject
-from arm_navigation_msgs import SetPlanningSceneDiff
-from gazebo import GetModelState
+from arm_navigation_msgs.srv import SetPlanningSceneDiff
+from gazebo_msgs.srv import *
 
 SET_PLANNING_SCENE_DIFF_NAME = '/environment_server/set_planning_scene_diff'
 
 class Test_Object_Handler(script):
 	def Initialize(self):
+		#self.sss.init("tray")
+		#self.sss.init("torso")
+		#self.sss.init("arm")
+		#self.sss.init("sdh")
+		#self.sss.set_light("red")
+		
 		
 		rospy.wait_for_service(SET_PLANNING_SCENE_DIFF_NAME)
 		self.set_planning_scene_diff_client = rospy.ServiceProxy(SET_PLANNING_SCENE_DIFF_NAME, SetPlanningSceneDiff)
@@ -37,8 +43,16 @@ class Test_Object_Handler(script):
 			rospy.loginfo("Testing Object_Handler modes...")
 		
 		rospy.loginfo("Start")		
-		self.HandleObject("add", "table_ikea")
+		### init poses
+		#handle01 = self.sss.move("arm","folded",False)
+		#self.sss.move("torso","home",False)
+		#self.sss.move("sdh","home",False)
+		#self.sss.move("tray","down")
+		#handle01.wait()
 		
+		self.GetModelState("milk_model")
+		
+		#self.HandleObject("add", "table_ikea")		
 		#self.AddWorld()	
 		#SetPlanningSceneDiff()	
 			
@@ -52,10 +66,10 @@ class Test_Object_Handler(script):
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e		
 
-	def GetModelState(self):
+	def GetModelState(self, model_name):
 		try:
 			get_model_state_req = GetModelStateRequest()
-			get_model_state_res = GetModelStateResponse()
+			get_model_state_req.model_name = model_name
 			get_model_state_res = self.get_model_state_client(get_model_state_req)
 			print get_model_state_res
 		except rospy.ServiceException, e:
