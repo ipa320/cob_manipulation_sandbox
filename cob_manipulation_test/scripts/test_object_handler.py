@@ -8,9 +8,10 @@ import rospy
 
 from simple_script_server import *
 #from script_utils import *
+import tf_conversions.posemath as pm
 
-from cob_object_handler.srv import HandleObject
-from arm_navigation_msgs.srv import SetPlanningSceneDiff
+from cob_object_handler.srv import *
+from arm_navigation_msgs.srv import *
 from gazebo_msgs.srv import *
 
 SET_PLANNING_SCENE_DIFF_NAME = '/environment_server/set_planning_scene_diff'
@@ -42,27 +43,63 @@ class Test_Object_Handler(script):
 		if not self.sss.parse:
 			rospy.loginfo("Testing Object_Handler modes...")
 		
-		rospy.loginfo("Start")		
-		### init poses
-		#handle01 = self.sss.move("arm","folded",False)
-		#self.sss.move("torso","home",False)
-		#self.sss.move("sdh","home",False)
-		#self.sss.move("tray","down")
-		#handle01.wait()
-		
-		self.GetModelState("milk_model")
-		
-		#self.HandleObject("add", "table_ikea")		
-		#self.AddWorld()	
-		#SetPlanningSceneDiff()	
+			### add world and static obstacles to collision_objects
+			self.AddWorld()
+			self.HandleObject("add", "table_ikea")	
+			self.HandleObject("add", "milk")
 			
+			#### just for updating in rviz
+			#self.SetPlanningSceneDiff()
+			
+			rospy.loginfo("Start")		
+			### init poses
+			handle01 = self.sss.move_planned("arm","folded",False)
+			self.sss.move("torso","home",False)
+			self.sss.move("sdh","home",False)
+			self.sss.move("tray","down")
+			handle01.wait()
+			
+			handle01 = self.sss.move_planned("arm","pregrasp")
+			handle01.wait()
+			
+			self.sss.move("sdh","cylopen")
+			
+			#milk_state = self.GetModelState("milk_model")
+			
+			#milk_pose = pm.fromMsg(milk_state.pose)
+			#print milk_pose
+			
+			##ToDo: get from GetModelState or ObjectDetection
+			grasp_pos = [-0.1,0,0.23]
+			grasp_ori = [0,0,0]
+			grasp_joint_state, error_code = self.sss.calculate_ik(['arm_7_link', grasp_pos, grasp_ori])
+			print grasp_joint_state.position
+			self.sss.wait_for_input()
+			self.sss.move("arm",[list(grasp_joint_state.position)])
+			
+			self.sss.move("sdh", "cylclosed")
+			self.HandleObject("attach","milk")
+			self.SetPlanningSceneDiff()
+			
+			pick_up_pos = [0.5,0,0]
+			pick_up_pos = [0,0,0]
+			pick_up_pos_joint_state, error_code = self.sss.calculate_ik(['arm_7_link', pick_up_pos, pick_up_pos])
+			print pick_up_pos_joint_state.position
+			self.sss.wait_for_input()
+			self.sss.move("arm",[list(pick_up_pos_joint_state.position)])
+			
+			
+			handle01 = self.sss.move_planned("arm","wavein")
+			handle01.wait()
+		
+			self.SetPlanningSceneDiff()
 			
 	def SetPlanningSceneDiff(self):
 		try:	
 			set_planning_scene_diff_req = SetPlanningSceneDiffRequest()
 			set_planning_scene_diff_res = SetPlanningSceneDiffResponse()
 			set_planning_scene_diff_res = self.set_planning_scene_diff_client(set_planning_scene_diff_req)
-			print set_planning_diff_res
+			print set_planning_scene_diff_res
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e		
 
@@ -74,6 +111,7 @@ class Test_Object_Handler(script):
 			print get_model_state_res
 		except rospy.ServiceException, e:
 			print "Service call failed: %s"%e
+		return get_model_state_res
 					
 	def AddWorld(self):
 		rospy.loginfo("AddWorld")
