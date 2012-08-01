@@ -59,6 +59,7 @@ class Test_Object_Handler(script):
 			self.sss.move("tray","down")
 			handle01.wait()
 			
+			print "To PreGrasp"
 			handle01 = self.sss.move_planned("arm","pregrasp")
 			handle01.wait()
 			
@@ -70,29 +71,81 @@ class Test_Object_Handler(script):
 			#print milk_pose
 			
 			##ToDo: get from GetModelState or ObjectDetection
-			grasp_pos = [-0.1,0,0.23]
+			grasp_pos = [-0.1,0,0.20]
 			grasp_ori = [0,0,0]
 			grasp_joint_state, error_code = self.sss.calculate_ik(['arm_7_link', grasp_pos, grasp_ori])
 			print grasp_joint_state.position
 			self.sss.wait_for_input()
+			print "To Grasp"
 			self.sss.move("arm",[list(grasp_joint_state.position)])
 			
 			self.sss.move("sdh", "cylclosed")
 			self.HandleObject("attach","milk")
 			self.SetPlanningSceneDiff()
 			
-			pick_up_pos = [0.5,0,0]
-			pick_up_pos = [0,0,0]
-			pick_up_pos_joint_state, error_code = self.sss.calculate_ik(['arm_7_link', pick_up_pos, pick_up_pos])
-			print pick_up_pos_joint_state.position
-			self.sss.wait_for_input()
-			self.sss.move("arm",[list(pick_up_pos_joint_state.position)])
+			#pick_up_pos = [0.3,0,0]
+			#pick_up_ori = [0,0,0]
+			#pick_up_pos_joint_state, error_code = self.sss.calculate_ik(['arm_7_link', pick_up_pos, pick_up_ori])
+			#print pick_up_pos_joint_state.position
+			#self.sss.wait_for_input()
+			#self.sss.move("arm",[list(pick_up_pos_joint_state.position)])
+			print "To PreGrasp"
+			self.sss.move("arm","pregrasp")
 			
+			#print "To WaveIn"
+			#handle01 = self.sss.move_planned("arm","wavein")
+			#handle01.wait()
 			
-			handle01 = self.sss.move_planned("arm","wavein")
+			print "To Hold"
+			handle01 = self.sss.move_planned("arm","hold")
 			handle01.wait()
 		
 			self.SetPlanningSceneDiff()
+			
+			print "To Folded"
+			handle01 = self.sss.move_planned("arm","folded")
+			handle01.wait()
+			
+			
+			put_down_pos = [0.51, -0.29, 1.23]	#[0.537, -0.206, 1.149]	#[0.492, -0.373, 1.316]
+			put_down_ori = [0.22, -1.3, -1.92]	#[0.189, -1.401, -1.756]	#[0.255, -1.206, -2.107]
+			put_down_pos_joint_state, error_code = self.sss.calculate_ik(['base_footprint', put_down_pos, put_down_ori])
+			print put_down_pos_joint_state.position
+			#self.sss.wait_for_input()
+			#self.sss.move_planned("arm",[list(put_down_pos_joint_state.position)])		
+			
+			print "To OverTray"
+			handle01 = self.sss.move_planned("arm","overtray")
+			handle01.wait()
+			
+			
+			self.sss.move("tray","up")
+			self.sss.move("sdh","cylopen")
+			self.HandleObject("detach","milk")
+			self.SetPlanningSceneDiff()
+			
+			
+			#handle01 = self.sss.move("arm",[list(put_down_pos_joint_state.position)],True)
+			#handle01.wait()
+			put_down_pos = [0.25, 0, 0]
+			put_down_ori = [0, 0, 0]
+			put_down_pos_joint_state, error_code = self.sss.calculate_ik(['arm_7_link', put_down_pos, put_down_ori])
+			print put_down_pos_joint_state.position
+			self.sss.wait_for_input()
+			print "To Retreat"
+			self.sss.move("arm",[list(put_down_pos_joint_state.position)])	
+			
+			
+			self.sss.move("sdh","home")
+			
+			print "To Folded"
+			handle01 = self.sss.move_planned("arm","folded")
+			handle01.wait()
+			
+			
+			self.sss.move("sdh","home")
+			
+			
 			
 	def SetPlanningSceneDiff(self):
 		try:	
