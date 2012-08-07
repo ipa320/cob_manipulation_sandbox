@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+	<include file="$(find cob_arm_navigation)/launch/arm_navigation_ompl.launch" />
+
+	<node name="add_world_service" pkg="cob_object_handler" type="addWorldService" respawn="false" output="screen" />
+	<node name="object_handler" pkg="cob_object_handler" type="object_handler" respawn="false" output="screen" />	
+
+</launch>

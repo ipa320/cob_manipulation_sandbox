@@ -1,0 +1,18 @@
+<package>
+  <description brief="cob_manipulation_test">
+
+     cob_manipulation_test
+
+  </description>
+  <author>Felix Messmer</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_manipulation_test</url>
+  <depend package="cob_arm_navigation"/>
+  <depend package="cob_script_server"/>
+  <depend package="cob_object_handler"/>
+  <depend package="gazebo_msgs"/>
+
+</package>
+
+
