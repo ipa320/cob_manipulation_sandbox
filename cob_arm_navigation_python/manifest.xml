@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/cob_arm_navigation_python</url>
   <depend package="rospy"/>
   <depend package="cob_arm_navigation"/>
+  <depend package="cob_script_server"/>
 
 </package>
 
