@@ -10,11 +10,11 @@ class MotionPlanCache:
     def __init__(self):
         self.lock = threading.Lock()
         self.cache = dict()
-        rospy.wait_for_service('~get_motion_plan')
-        self.motion_plan_client = rospy.ServiceProxy('~get_motion_plan', GetMotionPlan)
+        rospy.wait_for_service('get_motion_plan')
+        self.motion_plan_client = rospy.ServiceProxy('get_motion_plan', GetMotionPlan)
         self.empty_srv = rospy.Service('clear', Empty, self.empty_cache)
-        self.cache_plan_srv = rospy.Service('~cache_motion_plan', GetMotionPlan, self.cache_motion_plan)
-        self.get_plan_srv = rospy.Service('~get_cached_motion_plan', GetMotionPlan, self.get_motion_plan)
+        self.cache_plan_srv = rospy.Service('cache_motion_plan', GetMotionPlan, self.cache_motion_plan)
+        self.get_plan_srv = rospy.Service('get_cached_motion_plan', GetMotionPlan, self.get_motion_plan)
     def empty_cache(self, req):
         with self.lock:
             self.cache.clear()
@@ -29,12 +29,13 @@ class MotionPlanCache:
         try:
             hash = str(req.motion_plan_request)
             with self.lock:
-                return self.cache.pop(hash)
+                res =  self.cache.pop(hash)
         except KeyError:
-            return self.motion_plan_client(req)
+            res = self.motion_plan_client(req)
+        return res
         
 if __name__ == "__main__":
     rospy.init_node('motion_plan_cache')
     motion_plan_cache = MotionPlanCache()
-    rospy.log_info('motion_plan_cache is ready')
+    rospy.loginfo('motion_plan_cache is ready')
     rospy.spin()
