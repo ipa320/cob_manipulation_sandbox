@@ -93,6 +93,15 @@ class ErrorCode(Exception):
         else:
             return "ERROR: "+str(self.error_code)
 
+class MotionHandleDummy:
+    def retry(self):
+        pass
+    def cancel(self):
+        pass
+    def is_done(self):
+        return 1
+    def wait(self, duration = None, hz=100):
+        return ErrorCode()
 class MotionHandle:
     def __init__(self, client, goal):
         self.client = client
@@ -163,8 +172,11 @@ class MotionPlan:
                 error_code = ex.plan(self.planning_scene)
                 if not error_code.success:
                     return error_code
+                else:
+                    break
         return ErrorCode()
 
     def execute(self):
+        PlanningScene.PlanningScene().get_current_scene()
         for ex in self.executables:
             yield ex.execute()
