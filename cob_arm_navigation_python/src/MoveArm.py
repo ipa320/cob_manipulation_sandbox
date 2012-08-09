@@ -11,7 +11,7 @@ from MotionPlan import *
 import actionlib
 import PlanningScene
 from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
-
+from copy import deepcopy
 
 arm_nav_error_dict = {}
 for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
@@ -69,7 +69,7 @@ def get_joint_goal(arm_name, target, planning_scene):
     cart_goal = False
     try:
         ps_target, ps_origin = parse_cartesian_parameters(arm_name, target)
-        cart_goal = "link" in ps_target.header.frame_id
+        cart_goal = "link" in ps_target.header.frame_id or ps_target.header.frame_id == "odom_combined" or ps_target.header.frame_id == "map" #todo: use tf?
     except (KeyError, ValueError): 
         cart_goal = False
 
@@ -92,7 +92,7 @@ class MoveArm(MotionExecutable):
     def __init__(self, name, target):
         self.name = name
         self.target = target
-        self.motion_plan = None
+        self.goal = None
         self.planner = rospy.ServiceProxy("/cob_arm_navigation/cache_motion_plan", GetMotionPlan)
         self.planner_service_name = "/cob_arm_navigation/get_cached_motion_plan"
         try:
@@ -107,8 +107,8 @@ class MoveArm(MotionExecutable):
         joint_goal, err = get_joint_goal(self.name, self.target, planning_scene)
         #print joint_goal
         if err is not None and err.val != err.SUCCESS:
-            self.motion_plan = None
-            return ErrorCode(arm_nav_error_dict[err.val])
+            self.goal = None
+            return ErrorCode("IK error: " + arm_nav_error_dict[err.val])
             
         req = GetMotionPlanRequest()
         req.motion_plan_request.group_name = self.name
@@ -127,27 +127,29 @@ class MoveArm(MotionExecutable):
             req.motion_plan_request.goal_constraints.joint_constraints.append(new_constraint)
         res = self.planner(req)
         if res.error_code.val == res.error_code.SUCCESS:
-            self.motion_plan = req.motion_plan_request
+            self.goal = MoveArmGoal()
+            self.goal.planner_service_name = self.planner_service_name
+            self.goal.motion_plan_request = req.motion_plan_request
+            self.goal.planning_scene_diff = deepcopy(planning_scene.scene_diff.planning_scene_diff)
+            self.goal.operations = deepcopy(planning_scene.scene_diff.operations)
             names = res.trajectory.joint_trajectory.joint_names
             positions = res.trajectory.joint_trajectory.points[-1].positions
             planning_scene.set_joint_state(names, positions)
             #print "points:", res.trajectory.joint_trajectory.points
             return ErrorCode()
         else:
-            self.motion_plan = None
+            planning_scene.get_current_scene()
+            self.goal = None
             return ErrorCode(arm_nav_error_dict[res.error_code.val])
 
     def execute(self):
-        if self.motion_plan is None:
+        if self.goal is None:
             error_code = self.plan()
             if not error_code.success:
                 raise error_code
-    
         client = actionlib.SimpleActionClient("/move_"+self.name, MoveArmAction)
-        goal = MoveArmGoal()
-        goal.planner_service_name = self.planner_service_name
-        goal.motion_plan_request = self.motion_plan
-        return MotionHandle(client, goal)
+        #print goal.planning_scene_diff
+        return MotionHandle(client, self.goal)
     
 
 class MoveArmInterpolated(MotionExecutable):
