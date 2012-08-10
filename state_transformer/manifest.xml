@@ -1,0 +1,18 @@
+<package>
+  <description brief="state_transformer">
+
+     state_transformer
+
+  </description>
+  <author>Jennifer Barry</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/state_transformer</url>
+  <depend package="planning_environment"/>
+  <depend package="roscpp"/>
+  <depend package="arm_navigation_msgs"/>
+  <depend package="geometry_msgs"/>
+
+</package>
+
+

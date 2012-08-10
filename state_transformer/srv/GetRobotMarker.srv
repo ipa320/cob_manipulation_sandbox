@@ -1,0 +1,12 @@
+#If you want just a subset of links, fill them out here
+#If left empty, will return whole robot
+string[] link_names
+
+arm_navigation_msgs/RobotState robot_state
+std_msgs/ColorRGBA color
+string ns
+float32 scale
+
+---
+
+visualization_msgs/MarkerArray marker_array
