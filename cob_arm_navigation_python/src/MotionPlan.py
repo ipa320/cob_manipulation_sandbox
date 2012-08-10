@@ -164,6 +164,7 @@ class MotionHandleSSS(MotionHandle):
 class MotionExecutable:
     def __radd__(self):
         return [self]
+        
 class MotionPlan:
     def __init__(self):
         self.executables = []
