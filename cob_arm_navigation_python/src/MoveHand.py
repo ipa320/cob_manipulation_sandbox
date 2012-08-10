@@ -8,13 +8,26 @@ from pr2_python.planning_scene_interface import get_planning_scene_interface
 from pr2_python.hand_description import HandDescription
 from pr2_python.world_interface import WorldInterface
 
-class MoveHand(MotionExecutable):
-    def __init__(self, arm, target, verify_cb = None, blocking = False):
-        self.name = HandDescription(arm).hand_group
+#class MoveHand(MotionExecutable):
+#    def __init__(self, arm, target, verify_cb = None):
+#        self.name = HandDescription(arm).hand_group
+#        self.target = target
+#        self.verify_cb = verify_cb
+#        self.js = None
+#    def plan(self):
+#        js = read_target_state_from_param(self.name, self.target)
+#        if js: 
+#            set_planning_scene_joint_state(js)
+#            return ErrorCode()
+#        else:
+#            return ErrorCode('Lookup for '+str(self.target)+' failed')
+#    def execute(self):
+#        sss = simple_script_server.simple_script_server()
+#        return MotionHandleSSS(sss, (self.name,self.target))
+class MoveComponent(MotionExecutable):
+    def __init__(self, name, target, verify_cb = None):
+        self.name = name
         self.target = target
-        self.verify_cb = verify_cb
-        self.blocking = blocking
-        self.js = None
     def plan(self):
         js = read_target_state_from_param(self.name, self.target)
         if js: 
