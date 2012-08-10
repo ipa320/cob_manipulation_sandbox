@@ -170,7 +170,7 @@ class Test_Object_Handler(script):
 		rospy.loginfo("AddWorld")
 		try:	
 			addWorld_req = HandleObjectRequest()
-			addWorld_req.operation.data = "add"
+			addWorld_req.operation = "add"
 			addWorld_res = HandleObjectResponse()
 			addWorld_res = self.add_world_client(addWorld_req)
 			print addWorld_res
@@ -181,8 +181,8 @@ class Test_Object_Handler(script):
 		rospy.loginfo("HandleObject")
 		try:	
 			handle_object_req = HandleObjectRequest()
-			handle_object_req.operation.data = operation
-			handle_object_req.object.data = object_name
+			handle_object_req.operation = operation
+			handle_object_req.object = object_name
 			handle_object_res = HandleObjectResponse()
 			handle_object_res = self.handle_object_client(handle_object_req)
 			print handle_object_res
