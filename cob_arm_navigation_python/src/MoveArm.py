@@ -13,6 +13,7 @@ from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
 from copy import deepcopy
 from pr2_python.planning_scene_interface import get_planning_scene_interface
 from pr2_python.trajectory_tools import last_state_on_joint_trajectory
+from tf.transformations import *
 
 arm_nav_error_dict = {}
 for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
@@ -71,7 +72,7 @@ def get_joint_goal(arm_name, target, robot_state):
     try:
         ps_target, ps_origin = parse_cartesian_parameters(arm_name, target)
         cart_goal = "link" in ps_target.header.frame_id or ps_target.header.frame_id == "odom_combined" or ps_target.header.frame_id == "map" #todo: use tf?
-    except (KeyError, ValueError): 
+    except (KeyError, ValueError, TypeError): 
         cart_goal = False
 
     if cart_goal:
