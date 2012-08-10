@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import roslib#
 roslib.load_manifest('cob_arm_navigation_python')
 
@@ -31,14 +32,14 @@ p.y += 0
 p.z += 0.10
 
 mp = MotionPlan()
-mp += MoveArm('arm', 'pregrasp')
+#mp += MoveArm('arm', 'pregrasp')
 mp += MoveHand('sdh', 'cylopen')
 mp += MoveArm("arm",[grasp_pose,['sdh_grasp_link']])
-mp += MoveHand('sdh', 'cylclosed')
-mp += AttachObject('sdh',  'milk')
+#mp += MoveHand('sdh', 'cylclosed')
+#mp += AttachObject('sdh',  'milk')
 #mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']])
-mp += MoveArm('arm', 'pregrasp')
-mp += MoveArm('arm', 'hold')
+#mp += MoveArm('arm', 'pregrasp')
+#mp += MoveArm('arm', 'hold')
 
 print mp.plan()
 for e in mp.execute():
