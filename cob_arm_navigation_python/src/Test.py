@@ -42,4 +42,4 @@ print mp.plan()
 for e in mp.execute():
     print e.wait()
     
-get_planning_scene_interface().reset()    
+get_planning_scene_interface().reset()
