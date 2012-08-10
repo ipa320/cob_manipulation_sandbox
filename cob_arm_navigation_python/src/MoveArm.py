@@ -9,9 +9,10 @@ from control_msgs.msg import *
 from cob_kinematics.srv import *
 from MotionPlan import *
 import actionlib
-import PlanningScene
 from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
 from copy import deepcopy
+from pr2_python.planning_scene_interface import get_planning_scene_interface
+from pr2_python.trajectory_tools import last_state_on_joint_trajectory
 
 arm_nav_error_dict = {}
 for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
@@ -65,7 +66,7 @@ def parse_cartesian_parameters(arm_name, parameters):
         ps = param
     return pose_target,ps
     
-def get_joint_goal(arm_name, target, planning_scene):
+def get_joint_goal(arm_name, target, robot_state):
     cart_goal = False
     try:
         ps_target, ps_origin = parse_cartesian_parameters(arm_name, target)
@@ -81,8 +82,8 @@ def get_joint_goal(arm_name, target, planning_scene):
         req.timeout = rospy.Duration(5.0)
         req.ik_request.ik_link_name = ps_origin.header.frame_id
         req.ik_request.pose_stamped = ps_target
-        req.ik_request.ik_seed_state = planning_scene.get_current_scene().robot_state
-        req.ik_request.robot_state = planning_scene.get_current_scene().robot_state
+        req.ik_request.ik_seed_state = robot_state
+        req.ik_request.robot_state = robot_state
         res = iks(req)
         return res.solution.joint_state, res.error_code
     else:
@@ -102,10 +103,10 @@ class MoveArm(MotionExecutable):
             self.planner = rospy.ServiceProxy("/ompl_planning/plan_kinematic_path", GetMotionPlan)
             self.planner_service_name = "/ompl_planning/plan_kinematic_path"
         rospy.loginfo("Using " + self.planner_service_name)
-    def plan(self, planning_scene=None, update_ps = True):
-        if planning_scene == None:
-            planning_scene = PlanningScene.PlanningScene()
-        joint_goal, err = get_joint_goal(self.name, self.target, planning_scene)
+    def plan(self, update_ps = True):
+        psi = get_planning_scene_interface()
+
+        joint_goal, err = get_joint_goal(self.name, self.target, psi.get_robot_state())
         #print joint_goal
         if err is not None and err.val != err.SUCCESS:
             self.goal = None
@@ -133,24 +134,22 @@ class MoveArm(MotionExecutable):
             self.goal = MoveArmGoal()
             self.goal.planner_service_name = self.planner_service_name
             self.goal.motion_plan_request = req.motion_plan_request
-            self.goal.planning_scene_diff = deepcopy(planning_scene.scene_diff.planning_scene_diff)
             if self.constraint_aware:
-                self.goal.operations = deepcopy(planning_scene.scene_diff.operations)
+                self.goal.operations = deepcopy(psi.current_diff.operations)
             else:
                 op = CollisionOperation()
-                op.object1 = op.COLLISION_SET_ALL
-                op.object2 = op.COLLISION_SET_ALL
+                op.object1 = op.COLLISION_SET_OBJECTS
+                op.object2 = op.COLLISION_SET_ATTACHED_OBJECTS
                 op.operation = op.DISABLE
                 self.goal.operations.collision_operations.append(op)
             if update_ps:
                 if self.constraint_aware:
-                    planning_scene.set_joint_state(res.trajectory.joint_trajectory.joint_names, res.trajectory.joint_trajectory.points[-1].positions)
+                    set_planning_scene_joint_state(last_state_on_joint_trajectory(res.trajectory.joint_trajectory))
                 else:
-                    planning_scene.set_joint_state(joint_goal.name, joint_goal.position)
+                    set_planning_scene_joint_state(joint_goal)
             #print "points:", res.trajectory.joint_trajectory.points
             return ErrorCode()
         else:
-            planning_scene.get_current_scene()
             self.goal = None
             return ErrorCode(arm_nav_error_dict[res.error_code.val])
 
@@ -160,11 +159,10 @@ class MoveArm(MotionExecutable):
             if not error_code.success:
                 raise error_code
         client = actionlib.SimpleActionClient("/move_"+self.name, MoveArmAction)
-        #print goal.planning_scene_diff
         return MotionHandle(client, self.goal)
     
 
-class MoveArmInterpolated(MotionExecutable):
+"""class MoveArmInterpolated(MotionExecutable):
     def __init__(self, name, target):
         self.name = name
         self.target = target
@@ -218,3 +216,4 @@ class MoveArmInterpolated(MotionExecutable):
         for i in range(len(goal.trajectory.points)):
             goal.trajectory.points[i].time_from_start=rospy.Duration(1)
         return MotionHandle(client, goal)
+"""

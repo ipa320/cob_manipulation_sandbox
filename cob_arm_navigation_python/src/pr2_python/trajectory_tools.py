@@ -5,7 +5,7 @@ A set of utility functions for working with joint and robot trajectories.
 
 __docformat__ = "restructuredtext en"
 
-import roslib; roslib.load_manifest('pr2_python')
+import roslib; roslib.load_manifest('cob_arm_navigation_python')
 import rospy
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectoryPoint

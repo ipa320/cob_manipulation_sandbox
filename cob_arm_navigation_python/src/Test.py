@@ -25,18 +25,21 @@ lift_pose = deepcopy(grasp_pose)
 p = lift_pose.pose.position
 p.x += 0.0
 p.y += 0.0
-p.z += 0.01
+p.z += 0.03
 
 mp = MotionPlan()
 mp += MoveArm('arm', 'pregrasp')
-mp += MoveHand('sdh', 'cylopen')
+mp += MoveHand('arm', 'cylopen')
 mp += MoveArm("arm",[grasp_pose,['sdh_grasp_link']])
-mp += MoveHand('sdh', 'cylclosed')
-mp += AttachObject('sdh',  'milk')
-mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']],False)
-mp += MoveArm('arm', 'pregrasp')
+mp += MoveHand('arm', 'cylclosed')
+mp += AttachObject('arm',  'milk')
+mp += EnableCollision('milk','table_ikea')
+mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']])
+mp += ResetCollisions()
 mp += MoveArm('arm', 'hold')
 
 print mp.plan()
 for e in mp.execute():
     print e.wait()
+    
+get_planning_scene_interface().reset()    

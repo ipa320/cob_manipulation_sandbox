@@ -5,7 +5,7 @@ Defines the WorldInterface class for working with the collision map.
 
 __docformat__ = "restructuredtext en"
 
-import roslib; roslib.load_manifest('pr2_python')
+import roslib; roslib.load_manifest('cob_arm_navigation_python')
 import rospy
 from arm_navigation_msgs.msg import CollisionObject, AttachedCollisionObject, Shape
 from arm_navigation_msgs.srv import GetPlanningScene, GetRobotState
@@ -52,9 +52,9 @@ class WorldInterface:
         self._attached_object_pub =\
             rospy.Publisher('attached_collision_object',\
                                 AttachedCollisionObject)
+                            
         self._reset_collider = rospy.ServiceProxy('/collider_node/reset', Empty)
         rospy.loginfo('Waiting for collider node reset service')
-        self._reset_collider.wait_for_service()
 
         self._robot_state = rospy.ServiceProxy('/environment_server/get_robot_state', GetRobotState)
         rospy.loginfo('Waiting for get robot state service')
@@ -77,9 +77,11 @@ class WorldInterface:
                                                      GetPlanningScene())
         rospy.loginfo('Waiting for get planning scene service')
         self.get_planning_scene.wait_for_service()
+        arms = ['arm'] #could somehow get these off the parameter server I guess
         self.hands = {}
-        self.hands['left_arm'] = HandDescription('left_arm')
-        self.hands['right_arm'] = HandDescription('right_arm')
+        #this is unfortunately necessary for dealing with attached objects
+        for arm in arms:
+            self.hands[arm] = HandDescription(arm)
         rospy.loginfo('World interface initialized')
 
     def _publish(self, msg, publisher):
@@ -103,6 +105,7 @@ class WorldInterface:
             the tilting laser to finish a new pass and repopulate the node with new data.  It is recommended that
             you always set repopulate to true.
         '''
+        self._reset_collider.wait_for_service()
         self._reset_collider()
         if not repopulate:
             rospy.loginfo('Reset collider, did not wait for repopulate')

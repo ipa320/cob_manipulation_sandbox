@@ -5,7 +5,8 @@ import rospy
 import threading
 
 from actionlib_msgs.msg import *
-import PlanningScene
+from pr2_python.planning_scene_interface import get_planning_scene_interface
+from pr2_python.trajectory_tools import set_joint_state_in_robot_state
 
 from geometry_msgs.msg import *
 from sensor_msgs.msg import *
@@ -83,6 +84,13 @@ def read_target_state_from_param(component_name, parameter_name):
         traj.append(point)
     return JointState(name=joint_names, position=traj[-1])
     
+def set_planning_scene_joint_state(js):
+    psi = get_planning_scene_interface()
+    rs = psi.get_robot_state()
+    set_joint_state_in_robot_state(js,rs)
+    psi.set_robot_state(rs)
+    psi.send_diff()
+    
 class ErrorCode(Exception):
     def __init__(self, msg=None):
         self.error_code = msg
@@ -157,11 +165,7 @@ class MotionExecutable:
     def __radd__(self):
         return [self]
 class MotionPlan:
-    def __init__(self, planning_scene = None):
-        if planning_scene:
-            self.planning_scene = planning_scene
-        else:
-            self.planning_scene = PlanningScene.PlanningScene()
+    def __init__(self):
         self.executables = []
     def __iadd__(self, ex):
         self.executables.append(ex)
@@ -169,7 +173,7 @@ class MotionPlan:
     def plan(self, retries = 1):
         for ex in self.executables:
             for i in range(retries+1):
-                error_code = ex.plan(self.planning_scene)
+                error_code = ex.plan()
                 if not error_code.success:
                     return error_code
                 else:
@@ -177,6 +181,6 @@ class MotionPlan:
         return ErrorCode()
 
     def execute(self):
-        PlanningScene.PlanningScene().get_current_scene()
+        get_planning_scene_interface().reset()
         for ex in self.executables:
             yield ex.execute()

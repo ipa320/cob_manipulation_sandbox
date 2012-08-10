@@ -108,12 +108,11 @@ class PlanningSceneInterface:
         
         self.transformer = TransformState()
 
-        arms = ['left_arm', 'right_arm'] #could somehow get these off the parameter server I guess
+        arms = ['arm'] #could somehow get these off the parameter server I guess
         self.hands = {}
         #this is unfortunately necessary for dealing with attached objects
         for arm in arms:
             self.hands[arm] = HandDescription(arm)
-
 
         self.send_diff()
         self.world_frame = '/odom_combined'
