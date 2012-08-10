@@ -18,17 +18,14 @@ p.x, p.y, p.z = [-0.8,-0.2,0.9]
 p.x += 0.02
 p.y += 0.02
 p.z += 0.05
-#grasp_pose.pose.position.y+=0.0
-#grasp_pose.pose.position.x+=0.0
 o = grasp_pose.pose.orientation
 o.x,o.y,o.z,o.w = quaternion_from_euler(-1.581, -0.019, 2.379)
 
 lift_pose = deepcopy(grasp_pose)
 p = lift_pose.pose.position
-p.x, p.y, p.z = [-0.8,-0.2,0.9]
-p.x += 0
-p.y += 0
-p.z += 0.10
+p.x += 0.0
+p.y += 0.0
+p.z += 0.01
 
 mp = MotionPlan()
 mp += MoveArm('arm', 'pregrasp')
@@ -36,7 +33,7 @@ mp += MoveHand('sdh', 'cylopen')
 mp += MoveArm("arm",[grasp_pose,['sdh_grasp_link']])
 mp += MoveHand('sdh', 'cylclosed')
 mp += AttachObject('sdh',  'milk')
-#mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']])
+mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']],False)
 mp += MoveArm('arm', 'pregrasp')
 mp += MoveArm('arm', 'hold')
 
