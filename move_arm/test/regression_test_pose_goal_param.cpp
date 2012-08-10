@@ -82,7 +82,7 @@ TEST(MoveArm, goToPoseGoal)
   private_handle.param<double>("goal_pitch",goal_pitch,0.0);
   private_handle.param<double>("goal_yaw",goal_yaw,0.0);
 
-  tf::Quaternion gripper_goal;
+  btQuaternion gripper_goal;
   geometry_msgs::Quaternion gripper_goal_msg;
   gripper_goal.setRPY(goal_roll,goal_pitch,goal_yaw);
   tf::quaternionTFToMsg(gripper_goal,gripper_goal_msg);

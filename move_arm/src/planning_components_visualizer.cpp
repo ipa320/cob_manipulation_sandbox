@@ -242,7 +242,7 @@ class PlanningComponentsVisualizer
         KinematicState* end_state_;
         map<string, StateTrajectoryDisplay> state_trajectory_display_map_;
         vector<string> joint_names_;
-        tf::Transform last_good_state_;
+        btTransform last_good_state_;
     };
 
     PlanningComponentsVisualizer()
@@ -387,7 +387,7 @@ class PlanningComponentsVisualizer
 
         // These positions will be reset by main()
         makeSelectableMarker(PlanningComponentsVisualizer::EndEffectorControl,
-                             tf::Transform(tf::Quaternion(0.0f, 0.0f, 0.0f, 1.0f), tf::Vector3(0.0f, 0.0f, 0.0f)), it->first,
+                             btTransform(btQuaternion(0.0f, 0.0f, 0.0f, 1.0f), btVector3(0.0f, 0.0f, 0.0f)), it->first,
                              it->first, 0.5f);
         cmd++;
       }
@@ -464,7 +464,7 @@ class PlanningComponentsVisualizer
       cylinder_object.id = id.str();
       collision_poles_[id.str()] = cylinder_object;
 
-      tf::Transform cur = toBulletTransform(pose);
+      btTransform cur = toBulletTransform(pose);
       makePoleContextMenu(cur, id.str(), "", 2.0f);
     }
 
@@ -617,7 +617,7 @@ class PlanningComponentsVisualizer
       if(old_group_name != "" && selectableMarkerExists(old_group_name + "_selectable"))
       {
         GroupCollection& gc = group_map_[old_group_name];
-        tf::Transform cur = robot_state_->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
+        btTransform cur = robot_state_->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
         deselectMarker(selectable_markers_[old_group_name + "_selectable"], cur);
 
         if(is_joint_control_active_)
@@ -630,7 +630,7 @@ class PlanningComponentsVisualizer
       if(is_ik_control_active_ && selectableMarkerExists(current_group_name_ + "_selectable"))
       {
         GroupCollection& gc = group_map_[current_group_name_];
-        tf::Transform cur = gc.getState(ik_control_type_)->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
+        btTransform cur = gc.getState(ik_control_type_)->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
         selectMarker(selectable_markers_[current_group_name_ + "_selectable"], cur);
         createSelectableJointMarkers(gc);
       }
@@ -663,14 +663,14 @@ class PlanningComponentsVisualizer
     {
       lock_.lock();
       GroupCollection& gc = group_map_[current_group_name_];
-      tf::Transform cur = gc.getState(ik_control_type_)->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
+      btTransform cur = gc.getState(ik_control_type_)->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
       double mult = CONTROL_SPEED / 100.0;
 
-      tf::Vector3& curOrigin = cur.getOrigin();
-      tf::Vector3 newOrigin(curOrigin.x() + (vx * mult), curOrigin.y() + (vy * mult), curOrigin.z() + (vz * mult));
+      btVector3& curOrigin = cur.getOrigin();
+      btVector3 newOrigin(curOrigin.x() + (vx * mult), curOrigin.y() + (vy * mult), curOrigin.z() + (vz * mult));
       cur.setOrigin(newOrigin);
 
-      tfScalar roll, pitch, yaw;
+      btScalar roll, pitch, yaw;
 
       cur.getBasis().getRPY(roll, pitch, yaw);
       roll += vr * mult;
@@ -737,7 +737,7 @@ class PlanningComponentsVisualizer
         {
           string parentLinkName = model->getParentLinkModel()->getName();
           string childLinkName = model->getChildLinkModel()->getName();
-          tf::Transform
+          btTransform
               transform =
                   gc.getState(ik_control_type_)->getLinkState(parentLinkName)->getGlobalLinkTransform()
                       * (gc.getState(ik_control_type_)->getKinematicModel()->getLinkModel(childLinkName)->getJointOriginTransform()
@@ -804,7 +804,7 @@ class PlanningComponentsVisualizer
     /// @param gc the group collection that the joint is in.
     /// @param value, a transform that the joint will attempt to match.
     /////
-  void setJointState(GroupCollection& gc, std::string& joint_name, tf::Transform value)
+  void setJointState(GroupCollection& gc, std::string& joint_name, btTransform value)
     {
 
 
@@ -823,7 +823,7 @@ class PlanningComponentsVisualizer
       bool is_prismatic = (dynamic_cast<const KinematicModel::PrismaticJointModel*>(joint_model) != NULL);
 
       KinematicState::LinkState* link_state = current_state->getLinkState(parent_link);
-      tf::Transform transformed_value;
+      btTransform transformed_value;
 
       if(is_prismatic)
       {
@@ -915,7 +915,7 @@ class PlanningComponentsVisualizer
       }
     }
 
-    void setNewEndEffectorPosition(GroupCollection& gc, tf::Transform& cur, bool coll_aware)
+    void setNewEndEffectorPosition(GroupCollection& gc, btTransform& cur, bool coll_aware)
     {
       if(!gc.getState(ik_control_type_)->updateKinematicStateWithLinkAt(gc.ik_link_name_, cur))
       {
@@ -938,8 +938,8 @@ class PlanningComponentsVisualizer
                                                arm_navigation_msgs::OrientationConstraint& goal_constraint,
                                                arm_navigation_msgs::OrientationConstraint& path_constraint) const
   {
-    tf::Transform cur = state.getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
-    //tfScalar roll, pitch, yaw;
+    btTransform cur = state.getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
+    //btScalar roll, pitch, yaw;
     //cur.getBasis().getRPY(roll,pitch,yaw);
     goal_constraint.header.frame_id = cm_->getWorldFrameId();
     goal_constraint.header.stamp = ros::Time::now();
@@ -1203,7 +1203,7 @@ class PlanningComponentsVisualizer
 
     void randomlyPerturb(PlanningComponentsVisualizer::GroupCollection& gc)
     {
-      tf::Transform currentPose = gc.getState(ik_control_type_)->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
+      btTransform currentPose = gc.getState(ik_control_type_)->getLinkState(gc.ik_link_name_)->getGlobalLinkTransform();
 
       int maxTries = 10;
       int numTries = 0;
@@ -1230,9 +1230,9 @@ class PlanningComponentsVisualizer
         double yA = currentPose.getRotation().y() + yAngleVar;
         double zA = currentPose.getRotation().z() + zAngleVar;
 
-        tf::Vector3 newPos(x,y,z);
-        tf::Quaternion newOrient(xA,yA,zA,1.0);
-        tf::Transform newTrans(newOrient,newPos);
+        btVector3 newPos(x,y,z);
+        btQuaternion newOrient(xA,yA,zA,1.0);
+        btTransform newTrans(newOrient,newPos);
 
         setNewEndEffectorPosition(gc, newTrans, collision_aware_);
         if(gc.good_ik_solution_)
@@ -1619,7 +1619,7 @@ class PlanningComponentsVisualizer
       sendPlanningScene();
       moveEndEffectorMarkers(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
 
-      tf::Transform cur = toBulletTransform(last_ee_poses_[current_group_name_]);
+      btTransform cur = toBulletTransform(last_ee_poses_[current_group_name_]);
       setNewEndEffectorPosition(gc, cur, collision_aware_);
     }
 
@@ -1639,7 +1639,7 @@ class PlanningComponentsVisualizer
             if(feedback->marker_name == current_group_name_) {
               return;
             } 
-            tf::Transform cur = toBulletTransform(feedback->pose);
+            btTransform cur = toBulletTransform(feedback->pose);
             if(feedback->marker_name.rfind("pole_") != string::npos)
             {
               selectMarker(selectable_markers_[feedback->marker_name], cur);
@@ -1671,7 +1671,7 @@ class PlanningComponentsVisualizer
           MenuHandler::EntryHandle handle;
           if(feedback->marker_name.rfind("_selectable") != string::npos)
           {
-            tf::Transform cur = toBulletTransform(feedback->pose);
+            btTransform cur = toBulletTransform(feedback->pose);
             if(is_ik_control_active_
                 && isGroupName(feedback->marker_name.substr(0, feedback->marker_name.rfind("_selectable"))))
             {
@@ -1868,7 +1868,7 @@ class PlanningComponentsVisualizer
             }
             else if(menu_entry_maps_["End Effector"][handle] == "Deselect")
             {
-              tf::Transform cur = toBulletTransform(feedback->pose);
+              btTransform cur = toBulletTransform(feedback->pose);
               deselectMarker(selectable_markers_[feedback->marker_name + "_selectable"], cur);
             }
           }
@@ -1887,7 +1887,7 @@ class PlanningComponentsVisualizer
             }
             else if(menu_entry_maps_["Collision Object"][handle] == "Deselect")
             {
-              tf::Transform cur = toBulletTransform(feedback->pose);
+              btTransform cur = toBulletTransform(feedback->pose);
               deselectMarker(selectable_markers_[feedback->marker_name + "_selectable"], cur);
             }
           }
@@ -1921,13 +1921,13 @@ class PlanningComponentsVisualizer
         case InteractiveMarkerFeedback::POSE_UPDATE:
           if(is_ik_control_active_ && isGroupName(feedback->marker_name))
           {
-            tf::Transform cur = toBulletTransform(feedback->pose);
+            btTransform cur = toBulletTransform(feedback->pose);
             setNewEndEffectorPosition(gc, cur, collision_aware_);
             last_ee_poses_[current_group_name_] = feedback->pose;
           }
           else if(is_joint_control_active_ && feedback->marker_name.rfind("_joint_control") != string::npos)
           {
-            tf::Transform cur = toBulletTransform(feedback->pose);
+            btTransform cur = toBulletTransform(feedback->pose);
             string jointName = feedback->marker_name.substr(0, feedback->marker_name.rfind("_joint_control"));
             setJointState(gc, jointName, cur);
           }
@@ -1981,7 +1981,7 @@ class PlanningComponentsVisualizer
     ////
     /// @brief Wrapper for makeSelectableMarker which assumes we are creating a collision pole.
     ////
-    void makePoleContextMenu(tf::Transform transform, string name, string description, float scale = 1.0f)
+    void makePoleContextMenu(btTransform transform, string name, string description, float scale = 1.0f)
     {
 
       makeSelectableMarker(PlanningComponentsVisualizer::CollisionObject, transform, name, description, scale);
@@ -1996,7 +1996,7 @@ class PlanningComponentsVisualizer
     /// @param scale uniformly sizes the marker and its controls
     /// @param publish if true, the marker server will publish the marker. Otherwise, it will not.
     /////
-    void makeSelectableMarker(InteractiveMarkerType type, tf::Transform transform, string name, string description,
+    void makeSelectableMarker(InteractiveMarkerType type, btTransform transform, string name, string description,
                               float scale = 1.0f, bool publish = true)
     {
       SelectableMarker selectable_marker;
@@ -2071,7 +2071,7 @@ class PlanningComponentsVisualizer
     /// @param marker a reference to the selectablemarker struct.
     /// @param transform location to select the marker.
     /////
-    void selectMarker(SelectableMarker& marker, tf::Transform transform)
+    void selectMarker(SelectableMarker& marker, btTransform transform)
     {
       InteractiveMarker dummy;
       if(interactive_marker_server_->get(marker.controlName_, dummy))
@@ -2106,7 +2106,7 @@ class PlanningComponentsVisualizer
     /// @param marker a reference to the selectablemarker struct.
     /// @param transform location of the marker when it is de-selected.
     /////
-    void deselectMarker(SelectableMarker& marker, tf::Transform transform)
+    void deselectMarker(SelectableMarker& marker, btTransform transform)
     {
       if(!interactive_marker_server_->erase(marker.controlName_))
       {
@@ -2131,7 +2131,7 @@ class PlanningComponentsVisualizer
       makeSelectableMarker(marker.type_, transform, marker.controlName_, marker.controlDescription_, scale);
     }
 
-    void makeInteractive1DOFTranslationMarker(tf::Transform transform, tf::Vector3 axis, string name, string description,
+    void makeInteractive1DOFTranslationMarker(btTransform transform, btVector3 axis, string name, string description,
                                               float scale = 1.0f, float value = 0.0f)
     {
       InteractiveMarker marker;
@@ -2168,7 +2168,7 @@ class PlanningComponentsVisualizer
 
     }
 
-    void makeInteractive1DOFRotationMarker(tf::Transform transform, tf::Vector3 axis, string name, string description,
+    void makeInteractive1DOFRotationMarker(btTransform transform, btVector3 axis, string name, string description,
                                            float scale = 1.0f, float angle = 0.0f)
     {
       InteractiveMarker marker;
@@ -2214,7 +2214,7 @@ class PlanningComponentsVisualizer
     /// @param scale uniformly sets the size in meters of the marker.
     /// @param pole if true, the marker is a large green cylinder. Otherwise it is a small white cube.
     /////
-    void makeInteractive6DOFMarker(bool fixed, tf::Transform transform, string name, string description,
+    void makeInteractive6DOFMarker(bool fixed, btTransform transform, string name, string description,
                                    float scale = 1.0f, bool pole = false)
     {
       InteractiveMarker marker;
@@ -2340,7 +2340,7 @@ class PlanningComponentsVisualizer
     }
   protected:
 
-    Pose toGeometryPose(tf::Transform transform)
+    Pose toGeometryPose(btTransform transform)
     {
       Pose toReturn;
       toReturn.position.x = transform.getOrigin().x();
@@ -2353,11 +2353,11 @@ class PlanningComponentsVisualizer
       return toReturn;
     }
 
-    tf::Transform toBulletTransform(geometry_msgs::Pose pose)
+    btTransform toBulletTransform(geometry_msgs::Pose pose)
     {
-      tf::Quaternion quat = tf::Quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-      tf::Vector3 vec = tf::Vector3(pose.position.x, pose.position.y, pose.position.z);
-      return tf::Transform(quat, vec);
+      btQuaternion quat = btQuaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+      btVector3 vec = btVector3(pose.position.x, pose.position.y, pose.position.z);
+      return btTransform(quat, vec);
     }
 
     void deleteKinematicStates()
@@ -2430,7 +2430,7 @@ class PlanningComponentsVisualizer
     bool is_joint_control_active_;
 
     map<string, bool> joint_clicked_map_;
-    map<string, tf::Transform> joint_prev_transform_map_;
+    map<string, btTransform> joint_prev_transform_map_;
   map<string, double> prev_joint_control_value_map_;
 };
 

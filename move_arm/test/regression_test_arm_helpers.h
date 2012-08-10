@@ -93,7 +93,7 @@ void goalToState(const move_arm::MoveArmGoal &goal, planning_models::KinematicSt
     }
 }
 
-tf::Transform effPosition(const planning_environment::KinematicModelStateMonitor &km, const move_arm::MoveArmGoal &goal)
+btTransform effPosition(const planning_environment::KinematicModelStateMonitor &km, const move_arm::MoveArmGoal &goal)
 {
     planning_models::KinematicState sp(*km.getRobotState());
     goalToState(goal, sp);
@@ -104,7 +104,7 @@ tf::Transform effPosition(const planning_environment::KinematicModelStateMonitor
 void diffConfig(const planning_environment::KinematicModelStateMonitor &km, move_arm::MoveArmGoal &goal, double& dist, double& angle)
 {
   //getting goal pose from km, I hope
-  tf::Transform pose1 = effPosition(km, goal);
+  btTransform pose1 = effPosition(km, goal);
   
   //getting current pose from km
   std::vector<std::string> names(7);
@@ -126,7 +126,7 @@ void diffConfig(const planning_environment::KinematicModelStateMonitor &km, move
       sp.getParamsJoint(names[i])[0];
   }
 
-  tf::Transform pose2 = effPosition(km, temp);
+  btTransform pose2 = effPosition(km, temp);
   dist = pose1.getOrigin().distance(pose2.getOrigin());
   angle = pose1.getRotation().angle(pose2.getRotation());
 }
@@ -140,7 +140,7 @@ void diffConfig(const planning_environment::KinematicModelStateMonitor &km, move
 //   }
  
 //   km.getKinematicModel()->computeTransforms(sp.getParams());
-//   tf::Transform pose1 = km.getKinematicModel()->getJoint("r_wrist_roll_joint")->after->globalTrans;
+//   btTransform pose1 = km.getKinematicModel()->getJoint("r_wrist_roll_joint")->after->globalTrans;
   
 //   planning_models::KinematicState sp(*km.getRobotState());
 //   move_arm::MoveArmGoal temp;
@@ -154,10 +154,10 @@ void diffConfig(const planning_environment::KinematicModelStateMonitor &km, move
 //       sp.getParamsJoint(names[i])[0];
 //   }
 
-//   tf::Transform pose2 = effPosition(km, temp);
+//   btTransform pose2 = effPosition(km, temp);
   
-//   tf::Vector3 origin1 = pose1.getOrigin();
-//   tf::Vector3 origin2 = pose2.getOrigin();
+//   btVector3 origin1 = pose1.getOrigin();
+//   btVector3 origin2 = pose2.getOrigin();
 // }
 
 bool finalStateMatchesGoal(const planning_environment::KinematicModelStateMonitor &km, move_arm::MoveArmGoal &goal) 

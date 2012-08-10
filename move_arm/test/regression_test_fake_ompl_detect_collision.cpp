@@ -98,7 +98,7 @@ void goalToState(const move_arm::MoveArmGoal &goal, planning_models::KinematicSt
     }
 }
 
-tf::Transform effPosition(const planning_environment::KinematicModelStateMonitor &km, const move_arm::MoveArmGoal &goal)
+btTransform effPosition(const planning_environment::KinematicModelStateMonitor &km, const move_arm::MoveArmGoal &goal)
 {
     planning_models::KinematicState sp(*km.getRobotState());
     goalToState(goal, sp);
@@ -123,7 +123,7 @@ void diffConfig(const planning_environment::KinematicModelStateMonitor &km, move
 		  << std::endl;
     }
 
-    tf::Transform pose1 = effPosition(km, goal);
+    btTransform pose1 = effPosition(km, goal);
     move_arm::MoveArmGoal temp;
 
     planning_models::KinematicState sp(*(km.getRobotState()));
@@ -133,7 +133,7 @@ void diffConfig(const planning_environment::KinematicModelStateMonitor &km, move
       temp.goal_constraints.joint_constraint[i].value[0] =
         sp.getParamsJoint(temp.goal_constraints.joint_constraint[i].joint_name)[0];
     }
-    tf::Transform pose2 = effPosition(km, temp);
+    btTransform pose2 = effPosition(km, temp);
     std::cout << std::endl;
     double dist = pose1.getOrigin().distance(pose2.getOrigin());
     std::cout << "  -position distance: " << dist << std::endl;
