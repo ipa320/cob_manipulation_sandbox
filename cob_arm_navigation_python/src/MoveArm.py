@@ -89,10 +89,11 @@ def get_joint_goal(arm_name, target, planning_scene):
         return read_target_state_from_param(arm_name, target), None
 
 class MoveArm(MotionExecutable):
-    def __init__(self, name, target):
+    def __init__(self, name, target, constraint_aware = True):
         self.name = name
         self.target = target
         self.goal = None
+        self.constraint_aware = constraint_aware
         self.planner = rospy.ServiceProxy("/cob_arm_navigation/cache_motion_plan", GetMotionPlan)
         self.planner_service_name = "/cob_arm_navigation/get_cached_motion_plan"
         try:
@@ -101,7 +102,7 @@ class MoveArm(MotionExecutable):
             self.planner = rospy.ServiceProxy("/ompl_planning/plan_kinematic_path", GetMotionPlan)
             self.planner_service_name = "/ompl_planning/plan_kinematic_path"
         rospy.loginfo("Using " + self.planner_service_name)
-    def plan(self, planning_scene=None):
+    def plan(self, planning_scene=None, update_ps = True):
         if planning_scene == None:
             planning_scene = PlanningScene.PlanningScene()
         joint_goal, err = get_joint_goal(self.name, self.target, planning_scene)
@@ -125,16 +126,27 @@ class MoveArm(MotionExecutable):
             new_constraint.tolerance_below = 0.05
             new_constraint.tolerance_above = 0.05
             req.motion_plan_request.goal_constraints.joint_constraints.append(new_constraint)
-        res = self.planner(req)
-        if res.error_code.val == res.error_code.SUCCESS:
+            
+        if self.constraint_aware:
+            res = self.planner(req)
+        if not self.constraint_aware or res.error_code.val == res.error_code.SUCCESS:
             self.goal = MoveArmGoal()
             self.goal.planner_service_name = self.planner_service_name
             self.goal.motion_plan_request = req.motion_plan_request
             self.goal.planning_scene_diff = deepcopy(planning_scene.scene_diff.planning_scene_diff)
-            self.goal.operations = deepcopy(planning_scene.scene_diff.operations)
-            names = res.trajectory.joint_trajectory.joint_names
-            positions = res.trajectory.joint_trajectory.points[-1].positions
-            planning_scene.set_joint_state(names, positions)
+            if self.constraint_aware:
+                self.goal.operations = deepcopy(planning_scene.scene_diff.operations)
+            else:
+                op = CollisionOperation()
+                op.object1 = op.COLLISION_SET_ALL
+                op.object2 = op.COLLISION_SET_ALL
+                op.operation = op.DISABLE
+                self.goal.operations.collision_operations.append(op)
+            if update_ps:
+                if self.constraint_aware:
+                    planning_scene.set_joint_state(res.trajectory.joint_trajectory.joint_names, res.trajectory.joint_trajectory.points[-1].positions)
+                else:
+                    planning_scene.set_joint_state(joint_goal.name, joint_goal.position)
             #print "points:", res.trajectory.joint_trajectory.points
             return ErrorCode()
         else:
@@ -144,7 +156,7 @@ class MoveArm(MotionExecutable):
 
     def execute(self):
         if self.goal is None:
-            error_code = self.plan()
+            error_code = self.plan(update_ps=False)
             if not error_code.success:
                 raise error_code
         client = actionlib.SimpleActionClient("/move_"+self.name, MoveArmAction)
