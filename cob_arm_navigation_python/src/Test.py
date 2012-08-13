@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import roslib#
+import roslib
 roslib.load_manifest('cob_arm_navigation_python')
 
 import rospy
