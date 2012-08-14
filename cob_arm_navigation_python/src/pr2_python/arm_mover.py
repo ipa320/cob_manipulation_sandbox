@@ -50,7 +50,8 @@ import arm_navigation_msgs.msg
 from arm_navigation_msgs.msg import ArmNavigationErrorCodes as ArmNavErrorCodes
 from arm_navigation_msgs.srv import GetStateValidityRequest
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
+#from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
+from control_msgs.msg import FollowJointTrajectory, FollowJointTrajectoryAction
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import JointState
 
@@ -238,15 +239,21 @@ class ArmMoverWorker(threading.Thread):
                 'move_%s' % self._arm_name, arm_navigation_msgs.msg.MoveArmAction)
             self._wait_for_action_server(self._move_arm_client)
             
-            jt_action_name = '/%s_arm_controller/joint_trajectory_action' % arm_abbr
-            self._joint_trajectory_client = actionlib.SimpleActionClient(jt_action_name, JointTrajectoryAction)
+            #jt_action_name = '/%s_arm_controller/joint_trajectory_action' % arm_abbr
+            #self._joint_trajectory_client = actionlib.SimpleActionClient(jt_action_name, JointTrajectoryAction)
+            #self._wait_for_action_server(self._joint_trajectory_client)
+            
+            jt_action_name = '/%s_arm_controller/follow_joint_trajectory' % arm_abbr
+            self._joint_trajectory_client = actionlib.SimpleActionClient(jt_action_name, FollowJointTrajectoryAction)
             self._wait_for_action_server(self._joint_trajectory_client)
             
             self._cart_interface = CartesianControllerInterface(self._arm_name)
         elif self._arm_name == 'both':
             self._joint_controller = 'two_arm_controller'
-            jt_two_arm_action_name = '/two_arm_controller/joint_trajectory_action'
-            self._joint_trajectory_client = actionlib.SimpleActionClient(jt_two_arm_action_name, JointTrajectoryAction)
+            #jt_two_arm_action_name = '/two_arm_controller/joint_trajectory_action'
+            #self._joint_trajectory_client = actionlib.SimpleActionClient(jt_two_arm_action_name, JointTrajectoryAction)
+            jt_two_arm_action_name = '/two_arm_controller/follow_joint_trajectory'
+            self._joint_trajectory_client = actionlib.SimpleActionClient(jt_two_arm_action_name, FollowJointTrajectoryAction)
             self._wait_for_action_server(self._joint_trajectory_client)
         else:
             raise ValueError('Invalid arm name for worker: %s' % self._arm_name)
@@ -527,7 +534,8 @@ class ArmMoverWorker(threading.Thread):
             **trajectory (trajectory_msgs.msg.JointTrajectory):** Trajectory to execute.
         '''
         self._controller_manager.switch_controllers(start_controllers=[self._joint_controller])
-        goal = JointTrajectoryGoal()
+        #goal = JointTrajectoryGoal()
+        goal = FollowJointTrajectoryGoal()
         goal.trajectory = trajectory
         jt_res = self._call_action(self._joint_trajectory_client, goal)
 
@@ -545,7 +553,8 @@ class ArmMoverWorker(threading.Thread):
         **trajectory (trajectory_msgs.msg.JointTrajectory):** Trajectory to execute.
         '''
         self._controller_manager.switch_controllers(start_controllers=[self._joint_controller])
-        goal = JointTrajectoryGoal()
+        #goal = JointTrajectoryGoal()
+        goal = FollowJointTrajectoryGoal()
         goal.trajectory = trajectory
         jt_res = self._call_action(self._joint_trajectory_client, goal)
 

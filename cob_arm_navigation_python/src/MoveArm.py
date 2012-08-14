@@ -9,7 +9,8 @@ from control_msgs.msg import *
 from cob_kinematics.srv import *
 from MotionPlan import *
 import actionlib
-from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
+#from pr2_controllers_msgs.msg import JointTrajectoryGoal, JointTrajectoryAction
+from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAction
 from copy import deepcopy
 from pr2_python.planning_scene_interface import get_planning_scene_interface
 from pr2_python.trajectory_tools import last_state_on_joint_trajectory
@@ -210,9 +211,9 @@ class MoveArm(MotionExecutable):
             if not error_code.success:
                 raise error_code
     
-        client = actionlib.SimpleActionClient(self.name + '_controller/joint_trajectory_action', JointTrajectoryAction)
-        print "/"+self.name + '_controller/joint_trajectory_action'
-        goal = JointTrajectoryGoal()
+        client = actionlib.SimpleActionClient(self.name + '_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
+        print "/"+self.name + '_controller/follow_joint_trajectory'
+        goal = FollowJointTrajectoryGoal()
         goal.trajectory = self.motion_plan.trajectory.joint_trajectory
         for i in range(len(goal.trajectory.points)):
             goal.trajectory.points[i].time_from_start=rospy.Duration(1)
