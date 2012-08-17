@@ -11,6 +11,15 @@ from pr2_python.trajectory_tools import set_joint_state_in_robot_state
 from geometry_msgs.msg import *
 from sensor_msgs.msg import *
 
+
+from arm_navigation_msgs.msg import *
+
+arm_nav_error_dict = {}
+for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
+    if not name[:1] == '_' and name != 'val':
+        arm_nav_error_dict[val] = name
+
+
 def read_target_state_from_param(component_name, parameter_name):
     # get joint_names from parameter server
     sss_global_prefix = "/script_server"
@@ -115,8 +124,12 @@ class MotionHandle:
         self.client = client
         self.goal = goal
         self.done = 0
+        self.state = None
+        self.result = None	
         self.retry()
     def done_cb(self, state, result):
+        self.state = state
+        self.result = result
         if  state == GoalStatus.SUCCEEDED:
             self.done = 1
         elif state == GoalStatus.ABORTED:
@@ -138,10 +151,19 @@ class MotionHandle:
         while self.is_done() == 0 and (duration is None or d > rospy.Time.now() - start):
             #print self.client.get_state()
             r.sleep()
+        print "MotionHanldeState: ", self.state
+        print "MotionHandleResult: ", self.result        
         if self.is_done() == 1:
             return ErrorCode()
+        elif self.result is None:
+            #This is a hack since e.g. tray/sdh sometimes return ABORTED although the motion was successful			
+			error_code = ErrorCode()
+			error_code.success = True
+        else:
+			error_code = ErrorCode(arm_nav_error_dict[self.result.error_code.val])
+        #error_code = ErrorCode("Motion failure %d: %s" % (self.client.get_state(), self.client.get_goal_status_text()))
         self.cancel()
-        return ErrorCode("Motion failure %d: %s" % (self.client.get_state(), self.client.get_goal_status_text()))
+        return error_code
         
 class MotionHandleSSS(MotionHandle):
     def __init__(self, sss, command):

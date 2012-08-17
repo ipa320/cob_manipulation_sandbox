@@ -19,7 +19,7 @@ p = grasp_pose.pose.position
 p.x, p.y, p.z = [-0.9,0.0,0.9]
 p.x += 0.02
 p.y += 0.02
-p.z += 0.02
+p.z += 0.03
 o = grasp_pose.pose.orientation
 o.x,o.y,o.z,o.w = quaternion_from_euler(-1.581, -0.019, 2.379)
 
@@ -70,7 +70,7 @@ if planning_res.success:
     for e in mp.execute():
         exec_res = e.wait()
         print exec_res
-        if not exec_res:
+        if not exec_res.success:
             print "Execution failed"
             break
 else:

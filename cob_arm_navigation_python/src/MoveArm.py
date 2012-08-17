@@ -16,10 +16,10 @@ from pr2_python.planning_scene_interface import get_planning_scene_interface
 from pr2_python.trajectory_tools import last_state_on_joint_trajectory
 from tf.transformations import *
 
-arm_nav_error_dict = {}
-for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
-    if not name[:1] == '_' and name != 'val':
-        arm_nav_error_dict[val] = name
+#arm_nav_error_dict = {}
+#for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
+#    if not name[:1] == '_' and name != 'val':
+#        arm_nav_error_dict[val] = name
 
 def parse_cartesian_param(param, now = None):
     if now is None:
@@ -121,7 +121,7 @@ class MoveArm(MotionExecutable):
         req = GetMotionPlanRequest()
         req.motion_plan_request.group_name = self.name
         req.motion_plan_request.num_planning_attempts = 1
-        req.motion_plan_request.allowed_planning_time = rospy.Duration(30.0)
+        req.motion_plan_request.allowed_planning_time = rospy.Duration(5.0)
 
         req.motion_plan_request.planner_id= ""
         #req.motion_plan_request.start_state = planning_scene.get_current_scene().robot_state
@@ -165,6 +165,7 @@ class MoveArm(MotionExecutable):
             error_code = self.plan(update_ps=False)
             if not error_code.success:
                 raise error_code
+        #ToDo: in final version: use result from planning step instead of calling move_arm        
         client = actionlib.SimpleActionClient("/move_"+self.name, MoveArmAction)
         return MotionHandle(client, self.goal)
     
