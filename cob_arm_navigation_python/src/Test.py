@@ -39,6 +39,7 @@ mp += AttachObject('arm',  'milk')
 mp += EnableCollision('milk','table_ikea')
 mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']])
 mp += ResetCollisions()
+
 #mp += MoveArm('arm', 'home')
 #mp += MoveComponent('tray', 'up')
 #mp += MoveArm('arm', 'hold')
@@ -54,14 +55,25 @@ mp += AttachObject('arm',  'milk')
 mp += EnableCollision('milk','tray_link')
 mp += MoveArm('arm', [['base_link',[0.64-0.161, -0.11+0.056,0.832+0.5],[-1.441, 0.118, -0.078]],['sdh_grasp_link']])
 mp += ResetCollisions()
-mp += MoveArm('arm', 'home')
+#mp += MoveArm('arm', 'home')
 mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']])
 mp += MoveComponent('sdh', 'cylopen')
 mp += DetachObject('arm',  'milk')
 mp += MoveArm('arm', 'pregrasp')
 
-print mp.plan(2)
-for e in mp.execute():
-    print e.wait()
+
+planning_res = mp.plan(2)
+print planning_res
+if planning_res.success:
+    print "For execution please press ENTER!"
+    raw_input()
+    for e in mp.execute():
+        exec_res = e.wait()
+        print exec_res
+        if not exec_res:
+            print "Execution failed"
+            break
+else:
+    print "Will not execute, since planning failed"
     
 get_planning_scene_interface().reset()

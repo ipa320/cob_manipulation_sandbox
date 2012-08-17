@@ -93,6 +93,7 @@ def get_joint_goal(arm_name, target, robot_state):
 
 class MoveArm(MotionExecutable):
     def __init__(self, name, target, constraint_aware = True):
+        self.type = "MoveArm"
         self.name = name
         self.target = target
         self.goal = None
@@ -105,6 +106,9 @@ class MoveArm(MotionExecutable):
             self.planner = rospy.ServiceProxy("/ompl_planning/plan_kinematic_path", GetMotionPlan)
             self.planner_service_name = "/ompl_planning/plan_kinematic_path"
         rospy.loginfo("Using " + self.planner_service_name)
+    def info(self):
+		print self.name
+		print self.target
     def plan(self, update_ps = True):
         psi = get_planning_scene_interface()
 
@@ -117,7 +121,7 @@ class MoveArm(MotionExecutable):
         req = GetMotionPlanRequest()
         req.motion_plan_request.group_name = self.name
         req.motion_plan_request.num_planning_attempts = 1
-        req.motion_plan_request.allowed_planning_time = rospy.Duration(50.0)
+        req.motion_plan_request.allowed_planning_time = rospy.Duration(30.0)
 
         req.motion_plan_request.planner_id= ""
         #req.motion_plan_request.start_state = planning_scene.get_current_scene().robot_state
@@ -132,6 +136,7 @@ class MoveArm(MotionExecutable):
             
         if self.constraint_aware:
             res = self.planner(req)
+            print "Planner Result: ", arm_nav_error_dict[res.error_code.val]
         if not self.constraint_aware or res.error_code.val == res.error_code.SUCCESS:
             self.goal = MoveArmGoal()
             self.goal.planner_service_name = self.planner_service_name

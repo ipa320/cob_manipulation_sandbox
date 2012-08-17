@@ -173,15 +173,21 @@ class MotionPlan:
         return self
     def plan(self, retries = 1):
         for ex in self.executables:
+            print "\nStart planning for executable " + ex.type
+            ex.info()
             for i in range(retries+1):
+                print "Try Nr. ", i
                 error_code = ex.plan()
+                print error_code
                 if not error_code.success:
                     return error_code
                 else:
                     break
+        print "Done planning"
         return ErrorCode()
 
     def execute(self):
         get_planning_scene_interface().reset()
         for ex in self.executables:
+            print "\nStart executing executable " + ex.type
             yield ex.execute()

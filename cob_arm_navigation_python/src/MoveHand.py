@@ -26,8 +26,12 @@ from pr2_python.world_interface import WorldInterface
 #        return MotionHandleSSS(sss, (self.name,self.target))
 class MoveComponent(MotionExecutable):
     def __init__(self, name, target, verify_cb = None):
+        self.type = "MoveComponent"
         self.name = name
         self.target = target
+    def info(self):
+		print self.name
+		print self.target
     def plan(self):
         js = read_target_state_from_param(self.name, self.target)
         if js: 
@@ -41,8 +45,12 @@ class MoveComponent(MotionExecutable):
 
 class AttachObject:
     def __init__(self,arm, object_id):
+        self.type = "AttachObject"
         self.arm = arm
         self.object_id = object_id
+    def info(self):
+		print self.arm
+		print self.object_id
     def plan(self):
         get_planning_scene_interface().attach_object_to_gripper(self.arm, self.object_id)
         return ErrorCode()
@@ -51,8 +59,12 @@ class AttachObject:
         return MotionHandleDummy()
 class DetachObject:
     def __init__(self,arm, object_id):
+        self.type = "DetachObject"
         self.arm = arm
         self.object_id = object_id
+    def info(self):
+		print self.arm
+		print self.object_id
     def plan(self):
         get_planning_scene_interface().detach_and_add_back_attached_object(self.arm, self.object_id)
         return ErrorCode()
@@ -62,10 +74,14 @@ class DetachObject:
         
 class EnableCollision(CollisionOperation):
     def __init__(self, object1, object2):
+        self.type = "EnableCollision"
         CollisionOperation.__init__(self)
         self.object1 = object1
         self.object2 = object2
         self.operation = self.DISABLE # disable collision checks
+    def info(self):
+		print self.object1
+		print self.object2
     def plan(self):
         get_planning_scene_interface().add_ordered_collisions(OrderedCollisionOperations([self]))
         return ErrorCode()
@@ -73,6 +89,10 @@ class EnableCollision(CollisionOperation):
         return MotionHandleDummy()
     
 class ResetCollisions:
+    def __init__(self):
+        self.type = "ResetCollision"
+    def info(self):
+        pass
     def plan(self):
         get_planning_scene_interface().set_collisions(None)
         return ErrorCode()
