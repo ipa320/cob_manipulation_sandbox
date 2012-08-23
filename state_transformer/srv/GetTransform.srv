@@ -1,0 +1,10 @@
+arm_navigation_msgs/RobotState robot_state
+string from_frame_id
+string to_frame_id
+---
+int32 SUCCESS=1
+int32 BAD_ROBOT_STATE=-1
+int32 UNABLE_TO_FIND_FROM_FRAME=-2
+int32 UNABLE_TO_FIND_TO_FRAME=-3
+int32 val
+geometry_msgs/TransformStamped transform_stamped

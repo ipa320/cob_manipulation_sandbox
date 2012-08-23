@@ -1,0 +1,18 @@
+<package>
+  <description brief="cob_arm_navigation_python">
+
+     cob_arm_navigation_python
+
+  </description>
+  <author>Mathias Lüdtke</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_arm_navigation_python</url>
+  <depend package="rospy"/>
+  <depend package="cob_arm_navigation"/>
+  <depend package="cob_script_server"/>
+  <depend package="state_transformer"/>
+
+</package>
+
+
