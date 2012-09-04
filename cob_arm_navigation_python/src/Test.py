@@ -22,7 +22,7 @@ p = grasp_pose.pose.position
 #p.x, p.y, p.z = [-0.8,-0.2,0.9]
 p.x += 0.02
 p.y += 0.02
-p.z += 0.03
+p.z += 0.02
 o = grasp_pose.pose.orientation
 o.x,o.y,o.z,o.w = quaternion_from_euler(-1.581, -0.019, 2.379)
 
@@ -62,7 +62,7 @@ mp += ResetCollisions()
 mp += MoveArm("arm",[lift_pose,['sdh_grasp_link']])
 mp += MoveComponent('sdh', 'cylopen')
 mp += DetachObject('arm',  'milk')
-mp += MoveArm('arm', 'pregrasp')
+mp += MoveArm('arm', 'folded')
 
 
 planning_res = mp.plan(2)
