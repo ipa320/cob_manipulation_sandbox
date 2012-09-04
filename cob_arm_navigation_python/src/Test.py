@@ -10,13 +10,16 @@ from tf.transformations import *
 from copy import deepcopy
 rospy.init_node("test")
 
+from pr2_python.world_interface import WorldInterface
+
+wi = WorldInterface()
 grasp_pose = PoseStamped()
 #grasp_pose.header.frame_id = "base_link"
 grasp_pose.header.frame_id = "odom_combined"
 grasp_pose.header.stamp = rospy.Time()
-
+grasp_pose.pose = wi.collision_object('milk').poses[0]
 p = grasp_pose.pose.position
-p.x, p.y, p.z = [-0.9,0.0,0.9]
+#p.x, p.y, p.z = [-0.8,-0.2,0.9]
 p.x += 0.02
 p.y += 0.02
 p.z += 0.03
