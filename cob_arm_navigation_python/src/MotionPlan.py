@@ -198,13 +198,12 @@ class MotionPlan:
             print "\nStart planning for executable " + ex.type
             ex.info()
             for i in range(retries+1):
-                print "Try Nr. ", i
                 error_code = ex.plan()
-                print error_code
-                if not error_code.success:
-                    return error_code
-                else:
+                print "Try Nr. ", i, error_code
+                if error_code.success:
                     break
+            if not error_code.success:
+                return error_code
         print "Done planning"
         return ErrorCode()
 
