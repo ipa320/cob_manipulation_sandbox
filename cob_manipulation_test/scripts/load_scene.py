@@ -59,6 +59,6 @@ if __name__ == '__main__':
     rospy.sleep(1.0)
     pub.publish( createObject(Shape.BOX, "table_ikea", [-0.9,0,0.4],[0,0,0],[0.5, 1.0, 0.8]) )
     rospy.sleep(1.0)
-    pub.publish( createObject(Shape.CYLINDER, "milk", [-0.9,0.0,0.9],[0,0,0],[0.05, 0.2]) )
+    pub.publish( createObject(Shape.CYLINDER, "milk", [-0.8,-0.2,0.9],[0,0,0],[0.05, 0.2]) )
     rospy.sleep(1.0)
     print rospy.ServiceProxy('/environment_server/set_planning_scene_diff', SetPlanningSceneDiff)(SetPlanningSceneDiffRequest())
