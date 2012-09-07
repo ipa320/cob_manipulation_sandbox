@@ -3,9 +3,9 @@ import roslib
 roslib.load_manifest('cob_arm_navigation_python')
 
 import rospy
-from MotionPlan import *
-from MoveArm import *
-from MoveHand import *
+from cob_arm_navigation_python.MotionPlan import *
+from cob_arm_navigation_python.MoveArm import *
+from cob_arm_navigation_python.MoveHand import *
 from tf.transformations import *
 from copy import deepcopy
 rospy.init_node("test")
