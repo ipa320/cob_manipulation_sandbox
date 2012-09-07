@@ -122,7 +122,6 @@ typedef struct{
   
 static const std::string ARM_IK_NAME = "arm_ik";
 static const std::string TRAJECTORY_FILTER = "/trajectory_filter_server/filter_trajectory_with_constraints";
-static const std::string DISPLAY_PATH_PUB_TOPIC  = "display_path";
 static const std::string DISPLAY_PLANNED_PATH_PUB_TOPIC  = "display_planned_path";
 static const std::string DISPLAY_FILTERED_PATH_PUB_TOPIC  = "display_filtered_path";
 static const std::string DISPLAY_JOINT_GOAL_PUB_TOPIC  = "display_joint_goal";
@@ -171,7 +170,6 @@ public:
     action_server_.reset(new actionlib::SimpleActionServer<arm_navigation_msgs::MoveArmAction>(root_handle_, "move_" + group_name, boost::bind(&MoveArm::execute, this, _1), false));
     action_server_->start();
 
-    display_path_publisher_ = root_handle_.advertise<arm_navigation_msgs::DisplayTrajectory>(DISPLAY_PATH_PUB_TOPIC, 1, true);
     display_planned_path_publisher_ = root_handle_.advertise<arm_navigation_msgs::DisplayTrajectory>(DISPLAY_PLANNED_PATH_PUB_TOPIC, 1, true);
     display_filtered_path_publisher_ = root_handle_.advertise<arm_navigation_msgs::DisplayTrajectory>(DISPLAY_FILTERED_PATH_PUB_TOPIC, 1, true);
     display_joint_goal_publisher_ = root_handle_.advertise<arm_navigation_msgs::DisplayTrajectory>(DISPLAY_JOINT_GOAL_PUB_TOPIC, 1, true);
@@ -914,7 +912,6 @@ private:
             ROS_DEBUG("Trajectory validity check was successful");
 	    
 	    current_trajectory_ = res.trajectory.joint_trajectory;
-	    //visualizePlan(current_trajectory_);
 	    visualizePlannedPlan(current_trajectory_);
 	    //          printTrajectory(current_trajectory_);
 	    state_ = START_CONTROL;
@@ -1284,23 +1281,7 @@ private:
                                                             collision_models_->getWorldFrameId(),
                                                             d_path.robot_state);
     display_joint_goal_publisher_.publish(d_path);
-  }
-  void visualizePlan(const trajectory_msgs::JointTrajectory &trajectory)
-  {
-    move_arm_action_feedback_.state = "visualizing plan";
-    if(action_server_->isActive())
-      action_server_->publishFeedback(move_arm_action_feedback_);
-    arm_navigation_msgs::DisplayTrajectory d_path;
-    d_path.model_id = original_request_.motion_plan_request.group_name;
-    d_path.trajectory.joint_trajectory = trajectory;
-    resetToStartState(planning_scene_state_);
-    planning_environment::convertKinematicStateToRobotState(*planning_scene_state_,
-                                                            ros::Time::now(),
-                                                            collision_models_->getWorldFrameId(),
-                                                            d_path.robot_state);
-    display_path_publisher_.publish(d_path);
-  }
-  
+  }  
   void visualizePlannedPlan(const trajectory_msgs::JointTrajectory &trajectory)
   {
     move_arm_action_feedback_.state = "visualizing plan";
@@ -1440,7 +1421,6 @@ private:
 
   arm_navigation_msgs::GetMotionPlan::Request original_request_;
 
-  ros::Publisher display_path_publisher_;
   ros::Publisher display_planned_path_publisher_;
   ros::Publisher display_filtered_path_publisher_;
   ros::Publisher display_joint_goal_publisher_;
