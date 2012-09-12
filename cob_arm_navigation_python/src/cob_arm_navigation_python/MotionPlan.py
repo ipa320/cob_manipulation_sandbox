@@ -190,6 +190,17 @@ class MotionExecutable:
     def __radd__(self):
         return [self]
         
+class CallFunction(MotionExecutable):
+    def __init__(self, callback, *args, **kwargs):
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+    def plan(self, psi=None):
+        return ErrorCode()
+    def execute(self):
+        self.callback(*self.args, **self.kwargs)
+        return MotionHandleDummy()
+        
 class MotionPlan:
     def __init__(self):
         self.executables = []
