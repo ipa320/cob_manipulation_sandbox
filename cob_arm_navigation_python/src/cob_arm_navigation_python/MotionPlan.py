@@ -111,6 +111,8 @@ class ErrorCode(Exception):
             return "ERROR: "+str(self.error_code)
 
 class MotionHandleDummy:
+    def __init__(err = ErrorCode()):
+        self.err = err
     def retry(self):
         pass
     def cancel(self):
@@ -118,7 +120,8 @@ class MotionHandleDummy:
     def is_done(self):
         return 1
     def wait(self, duration = None, hz=100):
-        return ErrorCode()
+        return err
+        
 class MotionHandle:
     def __init__(self, client, goal):
         self.client = client

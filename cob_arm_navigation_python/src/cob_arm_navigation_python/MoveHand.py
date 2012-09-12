@@ -25,13 +25,13 @@ from pr2_python.world_interface import WorldInterface
 #        sss = simple_script_server.simple_script_server()
 #        return MotionHandleSSS(sss, (self.name,self.target))
 class MoveComponent(MotionExecutable):
-    def __init__(self, name, target, verify_cb = None):
+    def __init__(self, name, target):
         self.type = "MoveComponent"
         self.name = name
         self.target = target
     def info(self):
-		print self.name
-		print self.target
+        print self.name
+        print self.target
     def plan(self):
         js = read_target_state_from_param(self.name, self.target)
         if js: 
@@ -42,6 +42,41 @@ class MoveComponent(MotionExecutable):
     def execute(self):
         sss = simple_script_server.simple_script_server()
         return MotionHandleSSS(sss, (self.name,self.target))
+
+class CheckService(MotionExecutable):
+    def __init__(self, name, srvtype, args = {}, verify_cb = None):
+        self.type = "CheckGrasp"
+        self.name = name
+        self.srvtype = srvtype
+        self.verify_cb = verify_cb
+        self.args = args
+        self.proxy = rospy.ServiceProxy(name, srvtype)
+    def info(self):
+        print self.name
+        print self.srvtype
+        print self.args
+    def plan(self):
+        try:
+            self.proxy.wait_for_service(0.001) # zero is invalid
+            return ErrorCode()
+        except:
+            return ErrorCode('Service '+ self.srvname +' not available')
+    def execute(self):
+            try:
+                if self.args:
+                    res = self.proxy(**self.args)
+                else:
+                    res = self.proxy()
+                ok = True
+                if self.verify_cb:
+                    ok = self.verify_cb(res)
+            except:
+                ok = False
+            if ok:
+                return MotionHandleDummy()
+            else:
+                return MotionHandleDummy('Check failed')
+
 
 class AttachObject:
     def __init__(self,arm, object_id):
