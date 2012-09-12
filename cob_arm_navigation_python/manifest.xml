@@ -12,6 +12,7 @@
   <depend package="cob_arm_navigation"/>
   <depend package="cob_script_server"/>
   <depend package="state_transformer"/>
+  <depend package="tf"/>
 
 </package>
 

@@ -38,7 +38,7 @@ Wrappers for working with TF transform listeners.
 
 __docformat__ = "restructuredtext en"
 
-import roslib; roslib.load_manifest('pr2_python')
+import roslib; roslib.load_manifest('cob_arm_navigation_python')
 import threading
 import rospy
 import tf

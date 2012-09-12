@@ -38,7 +38,7 @@ Functions for working with geometry using numpy types.
 __docformat__ = "restructuredtext en"
 
 import roslib
-roslib.load_manifest('pr2_python')
+roslib.load_manifest('cob_arm_navigation_python')
 
 import numpy as np
 from tf import transformations
