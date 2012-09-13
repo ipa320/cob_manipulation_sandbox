@@ -60,7 +60,7 @@ class CheckService(MotionExecutable):
             self.proxy.wait_for_service(0.001) # zero is invalid
             return ErrorCode()
         except:
-            return ErrorCode('Service '+ self.srvname +' not available')
+            return ErrorCode('Service '+ self.name +' not available')
     def execute(self):
             try:
                 if self.args:
