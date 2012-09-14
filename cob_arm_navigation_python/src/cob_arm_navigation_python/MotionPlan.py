@@ -158,19 +158,8 @@ class MotionHandle:
         print "MotionHandleResult: ", self.result        
         if self.is_done() == 1:
             return ErrorCode()
-        elif self.result is None:
-            #This is a hack since e.g. tray/sdh sometimes return ABORTED although the motion was successful			
-			error_code = ErrorCode()
-			error_code.success = True
-        else:
-			try:
-			    error_code = ErrorCode(arm_nav_error_dict[self.result.error_code.val])
-			except:
-			    error_code = ErrorCode(str(self.result))
-        #error_code = ErrorCode("Motion failure %d: %s" % (self.client.get_state(), self.client.get_goal_status_text()))
         self.cancel()
-        return error_code
-        
+        return ErrorCode("Motion failure %d: %s" % (self.client.get_state(), self.client.get_goal_status_text()))        
 class MotionHandleSSS(MotionHandle):
     def __init__(self, sss, command):
         self.sss = sss
@@ -192,12 +181,14 @@ class MotionHandleSSS(MotionHandle):
 class MotionExecutable:
     def __radd__(self):
         return [self]
-        
+    def info(self):
+        pass
 class CallFunction(MotionExecutable):
     def __init__(self, callback, *args, **kwargs):
         self.callback = callback
         self.args = args
         self.kwargs = kwargs
+        self.type = "CallFunction"
     def plan(self, psi=None):
         return ErrorCode()
     def execute(self):
