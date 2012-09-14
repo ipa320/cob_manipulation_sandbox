@@ -24,11 +24,13 @@ from pr2_python.world_interface import WorldInterface
 #    def execute(self):
 #        sss = simple_script_server.simple_script_server()
 #        return MotionHandleSSS(sss, (self.name,self.target))
+
 class MoveComponent(MotionExecutable):
-    def __init__(self, name, target):
+    def __init__(self, name, target, dryrun=False):
         self.type = "MoveComponent"
         self.name = name
         self.target = target
+        self.dryrun = dryrun
     def info(self):
         print self.name
         print self.target
@@ -40,6 +42,8 @@ class MoveComponent(MotionExecutable):
         else:
             return ErrorCode('Lookup for '+str(self.target)+' failed')
     def execute(self):
+        if self.dryrun:
+                return MotionHandleDummy()
         sss = simple_script_server.simple_script_server()
         return MotionHandleSSS(sss, (self.name,self.target))
 
