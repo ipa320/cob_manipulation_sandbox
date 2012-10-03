@@ -23,4 +23,5 @@
   <depend package="cob_arm_navigation"/>
   <depend package="cob_hardware_config"/> <!-- for URDFs -->
   <depend package="cob_manipulator"/> <!-- pose_transform -->
+  <depend package="state_transformer"/>
 </package>

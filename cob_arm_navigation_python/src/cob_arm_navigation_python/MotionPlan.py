@@ -111,6 +111,8 @@ class ErrorCode(Exception):
             return "ERROR: "+str(self.error_code)
 
 class MotionHandleDummy:
+    def __init__(self, msg = None):
+        self.err = ErrorCode(msg)
     def retry(self):
         pass
     def cancel(self):
@@ -118,7 +120,8 @@ class MotionHandleDummy:
     def is_done(self):
         return 1
     def wait(self, duration = None, hz=100):
-        return ErrorCode()
+        return self.err
+        
 class MotionHandle:
     def __init__(self, client, goal):
         self.client = client
@@ -160,7 +163,10 @@ class MotionHandle:
 			error_code = ErrorCode()
 			error_code.success = True
         else:
-			error_code = ErrorCode(arm_nav_error_dict[self.result.error_code.val])
+			try:
+			    error_code = ErrorCode(arm_nav_error_dict[self.result.error_code.val])
+			except:
+			    error_code = ErrorCode(str(self.result))
         #error_code = ErrorCode("Motion failure %d: %s" % (self.client.get_state(), self.client.get_goal_status_text()))
         self.cancel()
         return error_code
@@ -186,6 +192,17 @@ class MotionHandleSSS(MotionHandle):
 class MotionExecutable:
     def __radd__(self):
         return [self]
+        
+class CallFunction(MotionExecutable):
+    def __init__(self, callback, *args, **kwargs):
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+    def plan(self, psi=None):
+        return ErrorCode()
+    def execute(self):
+        self.callback(*self.args, **self.kwargs)
+        return MotionHandleDummy()
         
 class MotionPlan:
     def __init__(self):

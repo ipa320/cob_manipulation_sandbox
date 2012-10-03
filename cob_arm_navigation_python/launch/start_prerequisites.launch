@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+	<include file="$(find cob_arm_navigation)/launch/start_planning_environment.launch"/>
+	<node name="state_transformer" pkg="state_transformer" type="state_transformer" respawn="false" output="screen" />  
+	<include file="$(find cob_arm_navigation_experimental)/launch/motion_plan_cache.launch" />
+</launch>

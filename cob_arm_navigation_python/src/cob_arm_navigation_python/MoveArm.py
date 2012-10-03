@@ -13,8 +13,9 @@ import actionlib
 from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAction
 from copy import deepcopy
 from pr2_python.planning_scene_interface import get_planning_scene_interface
-from pr2_python.trajectory_tools import last_state_on_joint_trajectory
+from pr2_python.trajectory_tools import *
 from tf.transformations import *
+import simple_script_server
 
 #arm_nav_error_dict = {}
 #for name,val in arm_navigation_msgs.msg.ArmNavigationErrorCodes.__dict__.items():
@@ -68,7 +69,7 @@ def parse_cartesian_parameters(arm_name, parameters):
         ps = param
     return pose_target,ps
     
-def get_joint_goal(arm_name, target, robot_state):
+def get_joint_goal(arm_name, target, robot_state, seed = None):
     cart_goal = False
     try:
         ps_target, ps_origin = parse_cartesian_parameters(arm_name, target)
@@ -84,18 +85,56 @@ def get_joint_goal(arm_name, target, robot_state):
         req.timeout = rospy.Duration(5.0)
         req.ik_request.ik_link_name = ps_origin.header.frame_id
         req.ik_request.pose_stamped = ps_target
-        req.ik_request.ik_seed_state = robot_state
+        req.ik_request.ik_seed_state = deepcopy(robot_state)
+        if seed is not None:
+	    js, err = get_joint_goal(arm_name, seed, robot_state)
+	    if (err is None or err.val == err.SUCCESS) and js is not None:
+		set_joint_state_in_robot_state(js,req.ik_request.ik_seed_state)
         req.ik_request.robot_state = robot_state
         res = iks(req)
         return res.solution.joint_state, res.error_code
     else:
         return read_target_state_from_param(arm_name, target), None
 
-class MoveArm(MotionExecutable):
-    def __init__(self, name, target, constraint_aware = True):
-        self.type = "MoveArm"
+class MoveArmUnplanned(MotionExecutable):
+    def __init__(self, name, target, seed = None):
+        self.type = "MoveArmUnplanned"
         self.name = name
         self.target = target
+        self.seed = seed
+        self.joint_goal = None
+    def info(self):
+		print self.name
+		print self.target
+    def plan(self, update_ps = True):
+        psi = get_planning_scene_interface()
+
+        self.joint_goal, err = get_joint_goal(self.name, self.target, psi.get_robot_state(), self.seed)
+        #print joint_goal
+        if err is not None and err.val != err.SUCCESS:
+            self.joint_goal = None
+            return ErrorCode("IK error: " + arm_nav_error_dict[err.val])
+	if update_ps:
+	    set_planning_scene_joint_state(self.joint_goal)
+	return ErrorCode()
+    def execute(self):
+	if self.joint_goal is None:
+	    error_code = self.plan(update_ps=False)
+	    if not error_code.success:
+		raise error_code
+	#ToDo: in final version: use result from planning step instead of calling move_arm        
+	sss = simple_script_server.simple_script_server()
+	if type(self.target) is str:
+	    target = self.target
+	else:
+	    target = [list(self.joint_goal.position)]
+	return MotionHandleSSS(sss, ('arm', target))
+	
+
+class MoveArm(MoveArmUnplanned):
+    def __init__(self, name, target, seed = None, constraint_aware = True):
+	MoveArmUnplanned.__init__(self, name, target, seed)
+        self.type = "MoveArm"
         self.goal = None
         self.constraint_aware = constraint_aware
         self.planner = rospy.ServiceProxy("/cob_arm_navigation/cache_motion_plan", GetMotionPlan)
@@ -112,12 +151,10 @@ class MoveArm(MotionExecutable):
     def plan(self, update_ps = True):
         psi = get_planning_scene_interface()
 
-        joint_goal, err = get_joint_goal(self.name, self.target, psi.get_robot_state())
-        #print joint_goal
-        if err is not None and err.val != err.SUCCESS:
-            self.goal = None
-            return ErrorCode("IK error: " + arm_nav_error_dict[err.val])
-            
+	ec = MoveArmUnplanned.plan(self,False)
+	if not ec.success:
+	    return ec
+	
         req = GetMotionPlanRequest()
         req.motion_plan_request.group_name = self.name
         req.motion_plan_request.num_planning_attempts = 1
@@ -126,7 +163,7 @@ class MoveArm(MotionExecutable):
         req.motion_plan_request.planner_id= ""
         #req.motion_plan_request.start_state = planning_scene.get_current_scene().robot_state
 
-        for n,p in zip(joint_goal.name, joint_goal.position):
+        for n,p in zip(self.joint_goal.name, self.joint_goal.position):
             new_constraint = JointConstraint()
             new_constraint.joint_name = n
             new_constraint.position = p
@@ -150,10 +187,7 @@ class MoveArm(MotionExecutable):
                 op.operation = op.DISABLE
                 self.goal.operations.collision_operations.append(op)
             if update_ps:
-                if self.constraint_aware:
-                    set_planning_scene_joint_state(last_state_on_joint_trajectory(res.trajectory.joint_trajectory))
-                else:
-                    set_planning_scene_joint_state(joint_goal)
+               set_planning_scene_joint_state(self.joint_goal)
             #print "points:", res.trajectory.joint_trajectory.points
             return ErrorCode()
         else:
@@ -168,7 +202,6 @@ class MoveArm(MotionExecutable):
         #ToDo: in final version: use result from planning step instead of calling move_arm        
         client = actionlib.SimpleActionClient("/move_"+self.name, MoveArmAction)
         return MotionHandle(client, self.goal)
-    
 
 """class MoveArmInterpolated(MotionExecutable):
     def __init__(self, name, target):
