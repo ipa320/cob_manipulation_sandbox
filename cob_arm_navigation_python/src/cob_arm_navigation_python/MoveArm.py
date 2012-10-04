@@ -14,6 +14,7 @@ from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAct
 from copy import deepcopy
 from pr2_python.planning_scene_interface import get_planning_scene_interface
 from pr2_python.trajectory_tools import *
+from pr2_python import transform_listener
 from tf.transformations import *
 import simple_script_server
 
@@ -73,11 +74,13 @@ def get_joint_goal(arm_name, target, robot_state, seed = None):
     cart_goal = False
     try:
         ps_target, ps_origin = parse_cartesian_parameters(arm_name, target)
-        cart_goal = "link" in ps_target.header.frame_id or ps_target.header.frame_id == "odom_combined" or ps_target.header.frame_id == "map" #todo: use tf?
+        cart_goal = "link" in ps_target.header.frame_id or "odom_combined" in ps_target.header.frame_id or "map" in ps_target.header.frame_id #todo: use tf?
     except (KeyError, ValueError, TypeError): 
         cart_goal = False
 
     if cart_goal:
+        if "map" in ps_target.header.frame_id:
+             ps_target = transform_listener.transform_pose_stamped('base_link', ps_target, use_most_recent=False)
         iks = rospy.ServiceProxy("/cob_ik_wrapper/arm/get_ik_extended", GetPositionIKExtended)
         req = GetPositionIKExtendedRequest()
         req.ik_pose = ps_origin.pose
@@ -98,6 +101,7 @@ def get_joint_goal(arm_name, target, robot_state, seed = None):
 
 class MoveArmUnplanned(MotionExecutable):
     def __init__(self, name, target, seed = None):
+	    transform_listener.get_transform_listener()
         self.type = "MoveArmUnplanned"
         self.name = name
         self.target = target
