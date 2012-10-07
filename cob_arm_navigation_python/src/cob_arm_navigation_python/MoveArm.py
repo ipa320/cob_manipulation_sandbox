@@ -101,7 +101,7 @@ def get_joint_goal(arm_name, target, robot_state, seed = None):
 
 class MoveArmUnplanned(MotionExecutable):
     def __init__(self, name, target, seed = None):
-	    transform_listener.get_transform_listener()
+        transform_listener.get_transform_listener()
         self.type = "MoveArmUnplanned"
         self.name = name
         self.target = target
